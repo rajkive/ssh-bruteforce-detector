@@ -1,5 +1,6 @@
 import re
 from datetime import datetime
+from collections import *
 
 
 #constants
@@ -9,6 +10,8 @@ WHITELIST = {"127.0.0.1", "192.168.1.1"}
 LOG_FILE = "Linux_2k.log"
 PATTERN = re.compile(r"(\w+ +\d+ \d+:\d+:\d+).*from (\d+\.\d+\.\d+\.\d+)")
 
+
+failed_attemps = defaultdict(list)
 
 #logic for parsing and extracting IP and datetime
 with open(LOG_FILE, "r") as f:
@@ -26,4 +29,10 @@ with open(LOG_FILE, "r") as f:
         timestamp = datetime.strptime(timestamp_str, "%b %d %H:%M:%S")
         timestamp = timestamp.replace(year=datetime.now().year)
         
-        print(f"{ip} failed at {timestamp}")
+        failed_attemps[ip].append(timestamp)
+        
+        #detection logic
+        
+#print how many times each IP has failed        
+for ip, timestamp in failed_attemps.items():
+    print(f"{ip} has failed {len(failed_attemps[ip])} times")
