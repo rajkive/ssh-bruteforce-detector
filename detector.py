@@ -11,7 +11,8 @@ LOG_FILE = "Linux_2k.log"
 PATTERN = re.compile(r"(\w+ +\d+ \d+:\d+:\d+).*from (\d+\.\d+\.\d+\.\d+)")
 
 
-failed_attemps = defaultdict(list)
+failed_attempts = defaultdict(list)
+blocked_ips = set()
 
 #logic for parsing and extracting IP and datetime
 with open(LOG_FILE, "r") as f:
@@ -29,10 +30,24 @@ with open(LOG_FILE, "r") as f:
         timestamp = datetime.strptime(timestamp_str, "%b %d %H:%M:%S")
         timestamp = timestamp.replace(year=datetime.now().year)
         
-        failed_attemps[ip].append(timestamp)
+        failed_attempts[ip].append(timestamp)
         
-        #detection logic
+for ip, timestamp in failed_attempts.items():
+    if len(failed_attempts[ip]) >= THRESHOLD:
+        if ip in WHITELIST:
+            continue
+        elif ip in blocked_ips:
+            continue
         
-#print how many times each IP has failed        
-for ip, timestamp in failed_attemps.items():
-    print(f"{ip} has failed {len(failed_attemps[ip])} times")
+        blocked_ips.add(ip)
+        
+print("\n--- Summary ---")
+print(f"Unique IPs with failed attempts: {len(failed_attempts)}")
+print(f"IPs blocked: {len(blocked_ips)}")
+
+if blocked_ips:
+    print("\nBlocked IPs:")
+    for ip in blocked_ips:
+        print(f"{ip} - {len(failed_attempts)} failed attempts ")
+else:
+    print("No IPs were blocked")
